@@ -31,6 +31,9 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+    if (argc <= 1)
+        FATAL("too few arguments: %d", argc);
+        
     pid_t pid = fork();
     switch (pid)
     {
