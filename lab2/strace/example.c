@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         ptrace(PTRACE_TRACEME, 0, 0, 0);
         /* Because we're now a tracee, execvp will block until the parent
          * attaches and allows us to continue. */
-        // execvp(argv[1], argv + 1);
+        execvp(argv[1], argv + 1);
         FATAL("%s", strerror(errno));
     }
 
