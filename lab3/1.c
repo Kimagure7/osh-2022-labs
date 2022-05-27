@@ -6,25 +6,42 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-struct Pipe {
+struct Pipe
+{
     int fd_send;
     int fd_recv;
 };
-
-void *handle_chat(void *data) {
+void *handle_chat(void *data)
+{
     struct Pipe *pipe = (struct Pipe *)data;
     char buffer[1024] = "Message: ";
+    char buffer_mess[1024] = ""; //这个用来接受纯净的信息 便于分离
     ssize_t len;
-    while ((len = recv(pipe->fd_send, buffer + 8, 1000, 0)) > 0) {
-        send(pipe->fd_recv, buffer, len + 8, 0);
+    //读进来自带换行符
+    while ((len = recv(pipe->fd_send, buffer_mess, 1000, 0)) > 0)
+    {
+        int temp = 0; //记录上一个\n位置
+        for (int i = 0; i < len; i++)
+        {
+            if (buffer_mess[i] == '\n')
+            {
+                strncpy(buffer + 9, buffer_mess + temp, i + 1 - temp);
+                send(pipe->fd_recv, buffer, strlen(buffer), 0);
+                memset(buffer, 0, sizeof(buffer));
+                strcpy(buffer, "Message: "); //恢复初始状态
+                temp = i + 1;                //+1 是为了跳过换行符
+            }
+        }
     }
     return NULL;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int port = atoi(argv[1]);
     int fd;
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    {
         perror("socket");
         return 1;
     }
@@ -33,17 +50,20 @@ int main(int argc, char **argv) {
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(port);
     socklen_t addr_len = sizeof(addr);
-    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr))) {
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)))
+    {
         perror("bind");
         return 1;
     }
-    if (listen(fd, 2)) {
+    if (listen(fd, 2))
+    {
         perror("listen");
         return 1;
     }
     int fd1 = accept(fd, NULL, NULL);
     int fd2 = accept(fd, NULL, NULL);
-    if (fd1 == -1 || fd2 == -1) {
+    if (fd1 == -1 || fd2 == -1)
+    {
         perror("accept");
         return 1;
     }
