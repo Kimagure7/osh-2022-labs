@@ -21,17 +21,40 @@ void *handle_chat(void *data)
     while ((len = recv(pipe->fd_send, buffer_mess, 1000, 0)) > 0)
     {
         int temp = 0; //记录上一个\n位置
+        //puts(buffer_mess);
+        //fflush(stdout);
         for (int i = 0; i < len; i++)
         {
+            // TODO：太长了而没有换行符
             if (buffer_mess[i] == '\n')
             {
                 strncpy(buffer + 9, buffer_mess + temp, i + 1 - temp);
-                send(pipe->fd_recv, buffer, strlen(buffer), 0);
+                // TODO:第二步处理 如果send没发全 就while一直发出去
+                int length = strlen(buffer);
+                int send_length = 0;         //记录已发送的字节数
+                while (send_length < length) //理论上只要有换行符就不会触发这里
+                {
+                    send_length += send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+                }
                 memset(buffer, 0, sizeof(buffer));
                 strcpy(buffer, "Message: "); //恢复初始状态
                 temp = i + 1;                //+1 是为了跳过换行符
             }
         }
+        if (temp != strlen(buffer_mess))
+        {
+            //如果沒有換行符
+            strncpy(buffer + 9, buffer_mess, strlen(buffer_mess));//全弄过来
+            int length = strlen(buffer);
+            int send_length = 0;         //记录已发送的字节数
+            while (send_length < length) //理论上只要有换行符就不会触发这里
+            {
+                send_length += send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+            }
+            memset(buffer, 0, sizeof(buffer));
+            strcpy(buffer, "Message: "); //恢复初始状态
+        }
+        memset(buffer_mess, 0, sizeof(buffer_mess));
     }
     return NULL;
 }
