@@ -14,42 +14,56 @@ struct Pipe
 void *handle_chat(void *data)
 {
     struct Pipe *pipe = (struct Pipe *)data;
-    char buffer[1024] = "Message: ";
+    char buffer[2048] = "Message: ";
     char buffer_mess[1024] = ""; //这个用来接受纯净的信息 便于分离
     ssize_t len;
     //读进来自带换行符
     while ((len = recv(pipe->fd_send, buffer_mess, 1000, 0)) > 0)
     {
         int temp = 0; //记录上一个\n位置
-        //puts(buffer_mess);
-        //fflush(stdout);
+        // puts(buffer_mess);
+        // fflush(stdout);
         for (int i = 0; i < len; i++)
         {
             // TODO：太长了而没有换行符
             if (buffer_mess[i] == '\n')
             {
-                strncpy(buffer + 9, buffer_mess + temp, i + 1 - temp);
+                strncpy(buffer +9, buffer_mess + temp, i + 1 - temp);
                 // TODO:第二步处理 如果send没发全 就while一直发出去
                 int length = strlen(buffer);
                 int send_length = 0;         //记录已发送的字节数
+                int send_return = 0;         // send的返回值
                 while (send_length < length) //理论上只要有换行符就不会触发这里
                 {
-                    send_length += send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+                    send_return = send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+                    if (send_return == -1)
+                    {
+                        perror("send");
+                        exit(-1);
+                    }
+                    send_length += send_return;
                 }
                 memset(buffer, 0, sizeof(buffer));
                 strcpy(buffer, "Message: "); //恢复初始状态
                 temp = i + 1;                //+1 是为了跳过换行符
             }
         }
-        if (temp != strlen(buffer_mess))
+        if (temp != strlen(buffer_mess)) //!= len也可以
         {
             //如果沒有換行符
-            strncpy(buffer + 9, buffer_mess, strlen(buffer_mess));//全弄过来
+            strncpy(buffer + 9, buffer_mess, strlen(buffer_mess)); //全弄过来
             int length = strlen(buffer);
             int send_length = 0;         //记录已发送的字节数
+            int send_return = 0;         // send的返回值
             while (send_length < length) //理论上只要有换行符就不会触发这里
             {
-                send_length += send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+                send_return = send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
+                if (send_return == -1)
+                {
+                    perror("send");
+                    exit(-1);
+                }
+                send_length += send_return;
             }
             memset(buffer, 0, sizeof(buffer));
             strcpy(buffer, "Message: "); //恢复初始状态
