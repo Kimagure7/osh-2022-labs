@@ -33,7 +33,7 @@ void *handle_chat(void *data)
                 int length = strlen(buffer);
                 int send_length = 0;         //记录已发送的字节数
                 int send_return = 0;         // send的返回值
-                while (send_length < length) //理论上只要有换行符就不会触发这里
+                while (send_length < length)
                 {
                     send_return = send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
                     if (send_return == -1)
@@ -55,7 +55,7 @@ void *handle_chat(void *data)
             int length = strlen(buffer);
             int send_length = 0;         //记录已发送的字节数
             int send_return = 0;         // send的返回值
-            while (send_length < length) //理论上只要有换行符就不会触发这里
+            while (send_length < length) 
             {
                 send_return = send(pipe->fd_recv, buffer + send_length, length - send_length, 0); //每次都尝试发送剩下的所有信息
                 if (send_return == -1)
