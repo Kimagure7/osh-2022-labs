@@ -41,7 +41,7 @@ void *handle_chat(void *data)
             return 0;
         }
 
-        int temp = 0; //记录上一个\n位置
+        int temp = -1; //记录上一个\n位置
         // puts(buffer_mess);
         // fflush(stdout);
         for (int i = 0; i < len; i++)
@@ -49,9 +49,9 @@ void *handle_chat(void *data)
             // TODO：太长了而没有换行符
             if (buffer_mess[i] == '\n')
             {
-                strncpy(buffer + 9, buffer_mess + temp, i + 1 - temp);
+                strncpy(buffer + 9, buffer_mess + temp +1, i - temp);
                 // TODO:第二步处理 如果send没发全 就while一直发出去
-                int length = strlen(buffer);
+                int length = i - temp + 9;
                 int send_length = 0; //记录已发送的字节数
                 int send_return = 0; // send的返回值
                 pthread_mutex_lock(&mutex);
@@ -76,14 +76,14 @@ void *handle_chat(void *data)
                 pthread_mutex_unlock(&mutex);
                 memset(buffer, 0, sizeof(buffer));
                 sprintf(buffer, "user %2d: ", user->id);//恢复初始状态
-                temp = i + 1;                //+1 是为了跳过换行符
+                temp = i;                //+1 是为了跳过换行符
             }
         }
-        if (temp != strlen(buffer_mess)) //!= len也可以
+        if (temp == -1) //!= len也可以
         {
             //如果沒有換行符
             strncpy(buffer + 9, buffer_mess, strlen(buffer_mess)); //全弄过来
-            int length = strlen(buffer);
+            int length = len + 9;
             int send_length = 0; //记录已发送的字节数
             int send_return = 0; // send的返回值
             pthread_mutex_lock(&mutex);

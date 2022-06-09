@@ -51,13 +51,13 @@ void *msg_pop(void *data)
 
                 len = strlen(msg);
 
-                int temp = 0; //记录上一个\n位置
+                int temp = -1; //记录上一个\n位置
                 for (int i = 0; i < len; i++)
                 {
                     // TODO：太长了而没有换行符
                     if (msg[i] == '\n')
                     {
-                        strncpy(buffer + 9, msg + temp, i + 1 - temp);
+                        strncpy(buffer + 9, msg + temp+1, i - temp);
                         // TODO:第二步处理 如果send没发全 就while一直发出去
                         int length = strlen(buffer);
                         int send_length = 0; //记录已发送的字节数
@@ -82,10 +82,10 @@ void *msg_pop(void *data)
                         }
                         memset(buffer, 0, sizeof(buffer));
                         sprintf(buffer, "user %2d: ", id); //恢复初始状态
-                        temp = i + 1;                      //+1 是为了跳过换行符
+                        temp = i;                      //+1 是为了跳过换行符
                     }
                 }
-                if (temp != strlen(msg)) //!= len也可以
+                if (temp == -1) //!= len也可以
                 {
                     //如果沒有換行符
                     strncpy(buffer + 9, msg, strlen(msg)); //全弄过来
